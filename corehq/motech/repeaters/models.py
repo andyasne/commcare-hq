@@ -778,6 +778,11 @@ class RepeatRecordAttempt(DocumentSchema):
             state = RECORD_FAILURE_STATE
         return state
 
+    @property
+    def created_at(self):
+        # Used by .../case/partials/repeat_records.html
+        return self.datetime
+
 
 class RepeatRecord(Document):
     """
@@ -1149,6 +1154,16 @@ class SQLRepeatRecord(models.Model):
     def record_id(self):
         # Used by Repeater.get_url() ... by SQLRepeatRecordReport._make_row()
         return self.pk
+
+    @property
+    def last_checked(self):
+        # Used by .../case/partials/repeat_records.html
+        return self.repeater.last_attempt_at
+
+    @property
+    def url(self):
+        # Used by .../case/partials/repeat_records.html
+        return self.repeater.couch_repeater.get_url(self)
 
     @property
     def failure_reason(self):
