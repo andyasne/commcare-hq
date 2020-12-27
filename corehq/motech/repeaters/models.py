@@ -67,7 +67,7 @@ import traceback
 import warnings
 from collections import OrderedDict
 from datetime import datetime, timedelta
-from typing import Any, Optional
+from typing import Any, overload
 from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 
 from django.utils.functional import cached_property
@@ -78,6 +78,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from couchdbkit.exceptions import ResourceConflict, ResourceNotFound
 from memoized import memoized
+from requests import Response
 from requests.exceptions import ConnectionError, Timeout
 
 from casexml.apps.case.xml import LEGAL_VERSIONS, V2
@@ -1198,7 +1199,13 @@ def send_request(
                                    RECORD_CANCELLED_STATE)  # Don't retry
 
 
-def format_response(response) -> Optional[str]:
+@overload
+def format_response(response: Any) -> None:
+    ...
+@overload
+def format_response(response: Response) -> str:
+    ...
+def format_response(response):
     if not is_response(response):
         return None
     response_text = getattr(response, "text", "")
