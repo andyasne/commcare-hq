@@ -8,7 +8,7 @@ from corehq.apps.data_interfaces.tasks import (
     task_generate_ids_and_operate_on_payloads,
 )
 from corehq.apps.data_interfaces.utils import (
-    _validate_record,
+    _get_couch_repeat_record,
     operate_on_payloads,
 )
 
@@ -47,7 +47,7 @@ class TestUtils(TestCase):
     @patch('corehq.motech.repeaters.models.RepeatRecord')
     def test__validate_record_record_does_not_exist(self, mock_RepeatRecord):
         mock_RepeatRecord.get.side_effect = [ResourceNotFound]
-        response = _validate_record('id_1', 'test_domain')
+        response = _get_couch_repeat_record('test_domain', 'id_1')
 
         mock_RepeatRecord.get.assert_called_once()
         self.assertIsNone(response)
@@ -57,7 +57,7 @@ class TestUtils(TestCase):
         mock_payload = Mock()
         mock_payload.domain = 'domain'
         mock_RepeatRecord.get.return_value = mock_payload
-        response = _validate_record('id_1', 'test_domain')
+        response = _get_couch_repeat_record('test_domain', 'id_1')
 
         mock_RepeatRecord.get.assert_called_once()
         self.assertIsNone(response)
@@ -67,7 +67,7 @@ class TestUtils(TestCase):
         mock_payload = Mock()
         mock_payload.domain = 'test_domain'
         mock_RepeatRecord.get.return_value = mock_payload
-        response = _validate_record('id_1', 'test_domain')
+        response = _get_couch_repeat_record('test_domain', 'id_1')
 
         mock_RepeatRecord.get.assert_called_once()
         self.assertEqual(response, mock_payload)
@@ -95,7 +95,7 @@ class TestTasks(TestCase):
                                                     task=task_generate_ids_and_operate_on_payloads)
 
     @patch('corehq.apps.data_interfaces.utils.DownloadBase')
-    @patch('corehq.apps.data_interfaces.utils._validate_record')
+    @patch('corehq.apps.data_interfaces.utils._get_couch_repeat_record')
     def test_operate_on_payloads_no_task_from_excel_false_resend(self, mock__validate_record, mock_DownloadBase):
         mock__validate_record.side_effect = [self.mock_payload_one, None]
 
@@ -113,7 +113,7 @@ class TestTasks(TestCase):
         self._check_resend(self.mock_payload_one, self.mock_payload_two, response, expected_response)
 
     @patch('corehq.apps.data_interfaces.utils.DownloadBase')
-    @patch('corehq.apps.data_interfaces.utils._validate_record')
+    @patch('corehq.apps.data_interfaces.utils._get_couch_repeat_record')
     def test_operate_on_payloads_no_task_from_excel_true_resend(self, mock__validate_record, mock_DownloadBase):
         mock__validate_record.side_effect = [self.mock_payload_one, None]
 
@@ -128,7 +128,7 @@ class TestTasks(TestCase):
         self._check_resend(self.mock_payload_one, self.mock_payload_two, response, expected_response)
 
     @patch('corehq.apps.data_interfaces.utils.DownloadBase')
-    @patch('corehq.apps.data_interfaces.utils._validate_record')
+    @patch('corehq.apps.data_interfaces.utils._get_couch_repeat_record')
     def test_operate_on_payloads_with_task_from_excel_false_resend(self, mock__validate_record, mock_DownloadBase):
         mock__validate_record.side_effect = [self.mock_payload_one, None]
 
@@ -146,7 +146,7 @@ class TestTasks(TestCase):
         self._check_resend(self.mock_payload_one, self.mock_payload_two, response, expected_response)
 
     @patch('corehq.apps.data_interfaces.utils.DownloadBase')
-    @patch('corehq.apps.data_interfaces.utils._validate_record')
+    @patch('corehq.apps.data_interfaces.utils._get_couch_repeat_record')
     def test_operate_on_payloads_with_task_from_excel_true_resend(self, mock__validate_record, mock_DownloadBase):
         mock__validate_record.side_effect = [self.mock_payload_one, None]
 
@@ -161,7 +161,7 @@ class TestTasks(TestCase):
         self._check_resend(self.mock_payload_one, self.mock_payload_two, response, expected_response)
 
     @patch('corehq.apps.data_interfaces.utils.DownloadBase')
-    @patch('corehq.apps.data_interfaces.utils._validate_record')
+    @patch('corehq.apps.data_interfaces.utils._get_couch_repeat_record')
     def test_operate_on_payloads_no_task_from_excel_false_cancel(self, mock__validate_record, mock_DownloadBase):
         mock__validate_record.side_effect = [self.mock_payload_one, None]
 
@@ -179,7 +179,7 @@ class TestTasks(TestCase):
         self._check_cancel(self.mock_payload_one, self.mock_payload_two, response, expected_response)
 
     @patch('corehq.apps.data_interfaces.utils.DownloadBase')
-    @patch('corehq.apps.data_interfaces.utils._validate_record')
+    @patch('corehq.apps.data_interfaces.utils._get_couch_repeat_record')
     def test_operate_on_payloads_no_task_from_excel_true_cancel(self, mock__validate_record, mock_DownloadBase):
         mock__validate_record.side_effect = [self.mock_payload_one, None]
 
@@ -194,7 +194,7 @@ class TestTasks(TestCase):
         self._check_cancel(self.mock_payload_one, self.mock_payload_two, response, expected_response)
 
     @patch('corehq.apps.data_interfaces.utils.DownloadBase')
-    @patch('corehq.apps.data_interfaces.utils._validate_record')
+    @patch('corehq.apps.data_interfaces.utils._get_couch_repeat_record')
     def test_operate_on_payloads_with_task_from_excel_false_cancel(self, mock__validate_record, mock_DownloadBase):
         mock__validate_record.side_effect = [self.mock_payload_one, None]
 
@@ -212,7 +212,7 @@ class TestTasks(TestCase):
         self._check_cancel(self.mock_payload_one, self.mock_payload_two, response, expected_response)
 
     @patch('corehq.apps.data_interfaces.utils.DownloadBase')
-    @patch('corehq.apps.data_interfaces.utils._validate_record')
+    @patch('corehq.apps.data_interfaces.utils._get_couch_repeat_record')
     def test_operate_on_payloads_with_task_from_excel_true_cancel(self, mock__validate_record, mock_DownloadBase):
         mock__validate_record.side_effect = [self.mock_payload_one, None]
 
@@ -227,7 +227,7 @@ class TestTasks(TestCase):
         self._check_cancel(self.mock_payload_one, self.mock_payload_two, response, expected_response)
 
     @patch('corehq.apps.data_interfaces.utils.DownloadBase')
-    @patch('corehq.apps.data_interfaces.utils._validate_record')
+    @patch('corehq.apps.data_interfaces.utils._get_couch_repeat_record')
     def test_operate_on_payloads_no_task_from_excel_false_requeue(self, mock__validate_record, mock_DownloadBase):
         mock__validate_record.side_effect = [self.mock_payload_one, None]
 
@@ -245,7 +245,7 @@ class TestTasks(TestCase):
         self._check_requeue(self.mock_payload_one, self.mock_payload_two, response, expected_response)
 
     @patch('corehq.apps.data_interfaces.utils.DownloadBase')
-    @patch('corehq.apps.data_interfaces.utils._validate_record')
+    @patch('corehq.apps.data_interfaces.utils._get_couch_repeat_record')
     def test_operate_on_payloads_no_task_from_excel_true_requeue(self, mock__validate_record, mock_DownloadBase):
         mock__validate_record.side_effect = [self.mock_payload_one, None]
 
@@ -260,7 +260,7 @@ class TestTasks(TestCase):
         self._check_requeue(self.mock_payload_one, self.mock_payload_two, response, expected_response)
 
     @patch('corehq.apps.data_interfaces.utils.DownloadBase')
-    @patch('corehq.apps.data_interfaces.utils._validate_record')
+    @patch('corehq.apps.data_interfaces.utils._get_couch_repeat_record')
     def test_operate_on_payloads_with_task_from_excel_false_requeue(self, mock__validate_record, mock_DownloadBase):
         mock__validate_record.side_effect = [self.mock_payload_one, None]
 
@@ -278,7 +278,7 @@ class TestTasks(TestCase):
         self._check_requeue(self.mock_payload_one, self.mock_payload_two, response, expected_response)
 
     @patch('corehq.apps.data_interfaces.utils.DownloadBase')
-    @patch('corehq.apps.data_interfaces.utils._validate_record')
+    @patch('corehq.apps.data_interfaces.utils._get_couch_repeat_record')
     def test_operate_on_payloads_with_task_from_excel_true_requeue(self, mock__validate_record, mock_DownloadBase):
         mock__validate_record.side_effect = [self.mock_payload_one, None]
 
@@ -293,7 +293,7 @@ class TestTasks(TestCase):
         self._check_requeue(self.mock_payload_one, self.mock_payload_two, response, expected_response)
 
     @patch('corehq.apps.data_interfaces.utils.DownloadBase')
-    @patch('corehq.apps.data_interfaces.utils._validate_record')
+    @patch('corehq.apps.data_interfaces.utils._get_couch_repeat_record')
     def test_operate_on_payloads_throws_exception_resend(self, mock__validate_record, mock_DownloadBase):
         mock__validate_record.side_effect = [self.mock_payload_one, self.mock_payload_two]
         self.mock_payload_two.fire.side_effect = [Exception]
@@ -312,7 +312,7 @@ class TestTasks(TestCase):
         self.assertEqual(response, expected_response)
 
     @patch('corehq.apps.data_interfaces.utils.DownloadBase')
-    @patch('corehq.apps.data_interfaces.utils._validate_record')
+    @patch('corehq.apps.data_interfaces.utils._get_couch_repeat_record')
     def test_operate_on_payloads_throws_exception_cancel(self, mock__validate_record, mock_DownloadBase):
         mock__validate_record.side_effect = [self.mock_payload_one, self.mock_payload_two]
         self.mock_payload_two.cancel.side_effect = [Exception]
@@ -333,7 +333,7 @@ class TestTasks(TestCase):
         self.assertEqual(response, expected_response)
 
     @patch('corehq.apps.data_interfaces.utils.DownloadBase')
-    @patch('corehq.apps.data_interfaces.utils._validate_record')
+    @patch('corehq.apps.data_interfaces.utils._get_couch_repeat_record')
     def test_operate_on_payloads_throws_exception_requeue(self, mock__validate_record, mock_DownloadBase):
         mock__validate_record.side_effect = [self.mock_payload_one, self.mock_payload_two]
         self.mock_payload_two.requeue.side_effect = [Exception]
