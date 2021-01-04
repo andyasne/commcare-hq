@@ -4,12 +4,11 @@ from unittest import skip
 from django.test import TestCase
 from django.urls import reverse
 
-from casexml.apps.case.mock import CaseBlock
+from casexml.apps.case.mock import CaseBlock, IndexAttrs
 from couchforms.models import XFormError
 
 from corehq import privileges
 from corehq.apps.domain.shortcuts import create_domain
-from corehq.apps.hqcase.utils import submit_case_blocks
 from corehq.apps.users.models import WebUser
 from corehq.form_processor.interfaces.dbaccessors import (
     CaseAccessors,
@@ -18,10 +17,14 @@ from corehq.form_processor.interfaces.dbaccessors import (
 from corehq.form_processor.tests.utils import FormProcessorTestUtils
 from corehq.util.test_utils import privilege_enabled
 
+from ..api import serialize_case
+from ..utils import submit_case_blocks
+
 
 @privilege_enabled(privileges.API_ACCESS)
 class TestCaseAPI(TestCase):
     domain = 'test-update-cases'
+    maxDiff = None
 
     @classmethod
     def setUpClass(cls):
@@ -43,6 +46,66 @@ class TestCaseAPI(TestCase):
     def tearDownClass(cls):
         cls.domain_obj.delete()
         super().tearDownClass()
+
+    def _make_case(self):
+        xform, cases = submit_case_blocks([CaseBlock(
+            case_id=str(uuid.uuid4()),
+            case_type='player',
+            case_name='Elizabeth Harmon',
+            external_id='1',
+            owner_id='methuen_home',
+            create=True,
+            update={
+                'sport': 'chess',
+                'rank': '1600',
+                'dob': '1948-11-02',
+            }
+        ).as_text()], domain=self.domain)
+        return cases[0]
+
+    def test_serialize_case(self):
+        parent_case_id = self._make_case().case_id
+        xform, cases = submit_case_blocks([CaseBlock(
+            case_id=str(uuid.uuid4()),
+            case_type='match',
+            case_name='Harmon/Luchenko',
+            owner_id='harmon',
+            external_id='14',
+            create=True,
+            update={'winner': 'Harmon'},
+            index={
+                'parent': IndexAttrs(case_type='player', case_id=parent_case_id, relationship='child')
+            },
+        ).as_text()], domain=self.domain)
+        case = cases[0]
+
+        self.assertEqual(
+            serialize_case(case),
+            {
+                "domain": self.domain,
+                "@case_id": case.case_id,
+                "@case_type": "match",
+                "case_name": "Harmon/Luchenko",
+                "external_id": "14",
+                "@owner_id": "harmon",
+                "date_opened": case.opened_on,
+                "last_modified": case.modified_on,
+                "server_last_modified": case.server_modified_on,
+                "closed": False,
+                "date_closed": None,
+                "properties": {
+                    "winner": "Harmon",
+                },
+                "indices": {
+                    "parent": {
+                        "case_id": parent_case_id,
+                        "@case_type": "player",
+                        "@relationship": "child",
+                    }
+                }
+            }
+
+        )
 
     def _create_case(self, body):
         return self.client.post(
@@ -89,22 +152,6 @@ class TestCaseAPI(TestCase):
         self.assertEqual(xform.xmlns, 'http://commcarehq.org/case_api')
         self.assertEqual(xform.metadata.userID, self.web_user.user_id)
         self.assertEqual(xform.metadata.deviceID, 'user agent string')
-
-    def _make_case(self):
-        xform, cases = submit_case_blocks([CaseBlock(
-            case_id=str(uuid.uuid4()),
-            case_type='player',
-            case_name='Elizabeth Harmon',
-            external_id='1',
-            owner_id='methuen_home',
-            create=True,
-            update={
-                'sport': 'chess',
-                'rank': '1600',
-                'dob': '1948-11-02',
-            }
-        ).as_text()], domain=self.domain)
-        return cases[0]
 
     def test_update_case(self):
         case = self._make_case()
