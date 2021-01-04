@@ -48,10 +48,13 @@ class JsonIndex(jsonobject.JsonObject):
 
 
 class BaseJsonCaseChange(jsonobject.JsonObject):
-    case_name = jsonobject.StringProperty(required=True)
+    case_name = jsonobject.StringProperty()
     external_id = jsonobject.StringProperty()
-    user_id = jsonobject.StringProperty(required=True)
-    owner_id = jsonobject.StringProperty(name='@owner_id', required=True)
+    user_id = jsonobject.StringProperty()
+    owner_id = jsonobject.StringProperty(name='@owner_id')
+    properties = jsonobject.DictProperty(validators=[is_simple_dict], default={})
+    indices = jsonobject.DictProperty(JsonIndex)
+    _is_case_creation = False
     properties = jsonobject.DictProperty(validators=[is_simple_dict], default={})
     indices = jsonobject.DictProperty(JsonIndex)
 
@@ -82,9 +85,15 @@ class BaseJsonCaseChange(jsonobject.JsonObject):
 
 class JsonCaseCreation(BaseJsonCaseChange):
     case_type = jsonobject.StringProperty(name='@case_type', required=True)
+
+    # overriding from subclass to mark these required
+    case_name = jsonobject.StringProperty(required=True)
+    user_id = jsonobject.StringProperty(required=True)
+    owner_id = jsonobject.StringProperty(name='@owner_id', required=True)
+
     _is_case_creation = True
 
 
 class JsonCaseUpdate(BaseJsonCaseChange):
-    case_id = jsonobject.StringProperty(required=True)
+    case_id = jsonobject.StringProperty()
     _is_case_creation = False

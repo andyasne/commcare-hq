@@ -153,6 +153,23 @@ class TestCaseAPI(TestCase):
         self.assertEqual(xform.metadata.userID, self.web_user.user_id)
         self.assertEqual(xform.metadata.deviceID, 'user agent string')
 
+    def test_no_required_updates(self):
+        case = self._make_case()
+
+        res = self._update_case(case.case_id, {
+            'properties': {'rank': '2100'}
+        })
+        self.assertEqual(res.status_code, 200)
+
+        case = self.case_accessor.get_case(case.case_id)
+        self.assertEqual(case.name, 'Beth Harmon')
+        self.assertEqual(case.owner_id, 'us_chess_federation')
+        self.assertEqual(case.dynamic_case_properties(), {
+            'dob': '1948-11-02',
+            'rank': '2100',
+            'sport': 'chess',
+        })
+
     def test_update_case(self):
         case = self._make_case()
 
@@ -300,3 +317,25 @@ class TestCaseAPI(TestCase):
         self.assertIn("InvalidCaseIndex", res.json()['error'])
         form = self.form_accessor.get_form(res.json()['@form_id'])
         self.assertIsInstance(form, XFormError)
+
+    def test_unset_external_id(self):
+        case = self._make_case()
+        self.assertEqual(case.external_id, '1')
+
+        res = self._update_case(case.case_id, {
+            'external_id': '',
+        })
+        self.assertEqual(res.status_code, 200)
+        case = self.case_accessor.get_case(case.case_id)
+        self.assertEqual(case.external_id, '')
+
+    def test_omitting_external_id_doesnt_clear_it(self):
+        case = self._make_case()
+        self.assertEqual(case.external_id, '1')
+
+        res = self._update_case(case.case_id, {
+            'properties': {'champion': 'true'},
+        })
+        self.assertEqual(res.status_code, 200)
+        case = self.case_accessor.get_case(case.case_id)
+        self.assertEqual(case.external_id, '')
