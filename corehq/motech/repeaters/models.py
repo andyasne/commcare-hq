@@ -76,7 +76,7 @@ from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 
 from couchdbkit.exceptions import ResourceConflict, ResourceNotFound
-from memoized import memoized
+from memoized import memoized, memoized_property
 from requests import Response
 from requests.exceptions import ConnectionError, Timeout
 
@@ -298,6 +298,27 @@ class Repeater(QuickCachedDocumentMixin, Document):
     @property
     def name(self):
         return self.connection_settings.name
+
+    def save(self, **kwargs):
+        is_new = not self._id
+        super().save(**kwargs)
+        if is_new:
+            RepeaterStub.objects.create(
+                domain=self.domain,
+                repeater_id=self._id,
+                is_paused=self.paused,
+            )
+
+    def delete(self):
+        self.repeater_stub.delete()
+        super().delete()
+
+    @memoized_property
+    def repeater_stub(self):
+        return RepeaterStub.objects.get(
+            domain=self.domain,
+            repeater_id=self._id,
+        )
 
     @classmethod
     def available_for_domain(cls, domain):
