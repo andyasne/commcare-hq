@@ -161,6 +161,17 @@ def iter_repeat_records_by_repeater(domain, repeater_id, chunk_size=1000):
         yield RepeatRecord.wrap(doc['doc'])
 
 
+def iter_repeaters():
+    from .models import Repeater
+
+    for result in Repeater.get_db().view(
+        'repeaters/repeaters',
+        include_docs=True,
+        reduce=False,
+    ).all():
+        yield Repeater.wrap(result['doc'])
+
+
 def get_repeat_records_by_payload_id(domain, payload_id):
     repeat_records = get_sql_repeat_records_by_payload_id(domain, payload_id)
     if repeat_records:
