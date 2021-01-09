@@ -369,3 +369,7 @@ class AddAttemptsTests(RepeaterFixtureMixin, TestCase):
                          RECORD_CANCELLED_STATE)
         self.assertEqual(self.repeat_record.attempts[0].message, message)
         self.assertEqual(self.repeat_record.attempts[0].traceback, tb_str)
+
+
+class TestAreRepeatRecordsMigrated(TestCase):
+    pass
