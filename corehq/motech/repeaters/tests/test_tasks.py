@@ -37,14 +37,14 @@ class TestProcessRepeaterStub(TestCase):
             name='Test API',
             url="http://localhost/api/"
         )
-        cls.repeater = FormRepeater(
-            domain=DOMAIN,
-            connection_settings_id=cls.connection_settings.id,
-        )
-        cls.repeater.save()
 
     def setUp(self):
-        self.repeater_stub = RepeaterStub.objects.create(
+        self.repeater = FormRepeater(
+            domain=DOMAIN,
+            connection_settings_id=self.connection_settings.id,
+        )
+        self.repeater.save()
+        self.repeater_stub = RepeaterStub.objects.get(
             domain=DOMAIN,
             repeater_id=self.repeater.get_id,
         )
@@ -57,11 +57,10 @@ class TestProcessRepeaterStub(TestCase):
             )
 
     def tearDown(self):
-        self.repeater_stub.delete()
+        self.repeater.delete()
 
     @classmethod
     def tearDownClass(cls):
-        cls.repeater.delete()
         cls.connection_settings.delete()
         cls.domain.delete()
         super().tearDownClass()

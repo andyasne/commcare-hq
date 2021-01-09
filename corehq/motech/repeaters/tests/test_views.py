@@ -7,7 +7,7 @@ from corehq.apps.reports.dispatcher import DomainReportDispatcher
 from corehq.apps.users.models import WebUser
 from corehq.motech.models import ConnectionSettings
 
-from ..models import FormRepeater, RepeaterStub
+from ..models import FormRepeater, RepeaterStub, are_repeat_records_migrated
 from ..views import SQLRepeatRecordReport
 
 DOMAIN = 'gaidhlig'
@@ -23,6 +23,7 @@ class TestReportQueries(TestCase):
                                   created_by=None, created_via=None)
 
     def setUp(self):
+        are_repeat_records_migrated.clear(DOMAIN)
         now = timezone.now()
         self.connection_settings = ConnectionSettings.objects.create(
             domain=DOMAIN,
@@ -34,7 +35,7 @@ class TestReportQueries(TestCase):
             connection_settings_id=self.connection_settings.id,
         )
         self.repeater.save()
-        self.repeater_stub = RepeaterStub.objects.create(
+        self.repeater_stub = RepeaterStub.objects.get(
             domain=DOMAIN,
             repeater_id=self.repeater.get_id,
         )
@@ -49,7 +50,6 @@ class TestReportQueries(TestCase):
             )
 
     def tearDown(self):
-        self.repeater_stub.delete()
         self.repeater.delete()
         self.connection_settings.delete()
 
@@ -76,7 +76,7 @@ class TestReportQueries(TestCase):
             # 10. SELECT ... FROM "accounting_defaultproductplan" INNER JOIN "accounting_softwareplan" ...
             #
             # Queries we do care about:
-            # 11. SELECT (1) AS "a" FROM "repeaters_sqlrepeaterstub" ...
+            # 11. SELECT (1) AS "a" FROM "repeaters_repeatrecord" ...
             # 12. SELECT ... FROM "repeaters_sqlrepeatrecord" INNER JOIN "repeaters_sqlrepeaterstub" ...
             # 13. SELECT ... FROM "repeaters_sqlrepeatrecordattempt" ...
             # 14. SELECT ... FROM "motech_connectionsettings" ...

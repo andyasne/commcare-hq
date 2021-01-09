@@ -46,7 +46,7 @@ class RepeaterFixtureMixin:
             url='https://www.example.com/api/',
         )
         self.repeater.save()
-        self.repeater_stub = RepeaterStub.objects.create(
+        self.repeater_stub = RepeaterStub.objects.get(
             domain=DOMAIN,
             repeater_id=self.repeater.get_id,
         )
