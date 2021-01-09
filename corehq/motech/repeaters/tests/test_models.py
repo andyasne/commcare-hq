@@ -3,6 +3,7 @@ from datetime import timedelta
 from uuid import uuid4
 
 from django.conf import settings
+from django.db import IntegrityError, transaction
 from django.test import SimpleTestCase, TestCase
 from django.utils import timezone
 
@@ -373,3 +374,34 @@ class AddAttemptsTests(RepeaterFixtureMixin, TestCase):
 
 class TestAreRepeatRecordsMigrated(TestCase):
     pass
+
+
+class RepeaterStubOneToOneRepeaterTests(RepeaterFixtureMixin, TestCase):
+
+    def test_one_in_domain(self):
+        self.assertEqual(RepeaterStub.objects.filter(
+            domain=DOMAIN,
+            repeater_id=self.repeater.get_id,
+        ).count(), 1)
+
+    def test_one_globally(self):
+        self.assertEqual(RepeaterStub.objects.filter(
+            repeater_id=self.repeater.get_id,
+        ).count(), 1)
+
+    def test_only_one_in_domain(self):
+        with transaction.atomic():
+            # (Run in its own transaction so as not to mess with tearDown)
+            with self.assertRaises(IntegrityError):
+                RepeaterStub.objects.create(
+                    domain=DOMAIN,
+                    repeater_id=self.repeater.get_id,
+                )
+
+    def test_only_one_globally(self):
+        with transaction.atomic():
+            with self.assertRaises(IntegrityError):
+                RepeaterStub.objects.create(
+                    domain='another-domain',
+                    repeater_id=self.repeater.get_id,
+                )
