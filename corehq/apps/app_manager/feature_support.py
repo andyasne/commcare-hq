@@ -173,3 +173,10 @@ class CommCareFeatureSupportMixin(object):
     @property
     def enable_markdown_tables(self):
         return self._require_minimum_version('2.50')
+
+    @property
+    def supports_session_endpoints(self):
+        return (
+            toggles.SESSION_ENDPOINTS.enabled(self.domain)
+            # and self._require_minimum_version('2.50.2')  # TODO: Uncomment after release
+        )
