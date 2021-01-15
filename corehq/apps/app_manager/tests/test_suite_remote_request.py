@@ -65,6 +65,7 @@ class RemoteRequestSuiteTest(SimpleTestCase, TestXmlMixin, SuiteMixin):
                 calc_xpath="instance('ledgerdb')/ledgers/name/name",
             ))
         )
+        # TODO
         self.module.search_config = CaseSearch(
             command_label={'en': 'Search Patients Nationally'},
             properties=[
@@ -136,6 +137,7 @@ class RemoteRequestSuiteTest(SimpleTestCase, TestXmlMixin, SuiteMixin):
         Case search action should be added to case list and a new search detail should be created
         """
         # Regular and advanced modules should get the search detail
+        # TODO
         search_config = CaseSearch(
             command_label={'en': 'Advanced Search'},
             properties=[CaseSearchProperty(name='name', label={'en': 'Name'})]

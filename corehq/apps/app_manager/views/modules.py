@@ -208,6 +208,9 @@ def _get_shared_module_view_context(request, app, module, case_property_builder,
             'search_command_label':
                 # use default if module_offers_search is false because module.search_config doesn't exist yet
                 module.search_config.command_label if hasattr(module, 'search_config') else "",
+            'search_again_label':
+                # use default if module_offers_search is false because module.search_config doesn't exist yet
+                module.search_config.again_label if hasattr(module, 'search_config') else "",
             'blacklisted_owner_ids_expression': (
                 module.search_config.blacklisted_owner_ids_expression if module_offers_search(module) else ""),
         },
@@ -1064,8 +1067,11 @@ def edit_module_detail_screens(request, domain, app_id, module_unique_id):
         ):
             command_label = module.search_config.command_label
             command_label[lang] = search_properties.get('search_command_label', '')
+            again_label = module.search_config.again_label
+            again_label[lang] = search_properties.get('search_again_label', '')
             module.search_config = CaseSearch(
                 command_label=command_label,
+                again_label=again_label,
                 properties=[
                     CaseSearchProperty.wrap(p)
                     for p in _update_search_properties(
