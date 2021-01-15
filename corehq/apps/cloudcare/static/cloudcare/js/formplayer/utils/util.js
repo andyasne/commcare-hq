@@ -154,6 +154,13 @@ hqDefine("cloudcare/js/formplayer/utils/util", function () {
             this.search = null;
         };
 
+        this.addStepIfNotLastStep = function(step) {
+            if (this.steps && this.steps[this.steps.length - 1] === step) {
+                return;
+            }
+            this.addStep(step);
+        };
+
         this.setPage = function (page) {
             this.page = page;
         };
@@ -169,13 +176,13 @@ hqDefine("cloudcare/js/formplayer/utils/util", function () {
             this.sortIndex = null;
         };
 
-        this.setQueryData = function (queryDict) {
+        this.setQueryData = function (queryDict, execute) {
             if (!this.queryData) {
                 this.queryData = {};
             }
             this.queryData[sessionStorage.queryKey] = {
                 inputs: queryDict,
-                execute: true,
+                execute: execute,
             };
         };
 
