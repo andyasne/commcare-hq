@@ -9,12 +9,23 @@ hqDefine("cloudcare/js/formplayer/menus/views/query", function () {
         template: _.template($("#query-view-item-template").html() || ""),
 
         templateContext: function () {
-            var imageUri = this.options.model.get('imageUri');
-            var audioUri = this.options.model.get('audioUri');
-            var appId = this.model.collection.appId;
+            var imageUri = this.options.model.get('imageUri'),
+                audioUri = this.options.model.get('audioUri'),
+                appId = this.model.collection.appId,
+                initialValue = this.options.model.get('value');
+
+            // If input doesn't have a default value, check to see if there's a sticky value from user's last search
+            if (!initialValue) {
+                initialValue = hqImport("cloudcare/js/formplayer/utils/util").getStickyQueryInputs()[this.options.model.get('id')];
+                if (initialValue && this.options.model.get('input') === "select1") {
+                    initialValue = parseInt(initialValue);
+                }
+            }
+
             return {
                 imageUrl: imageUri ? FormplayerFrontend.getChannel().request('resourceMap', imageUri, appId) : "",
                 audioUrl: audioUri ? FormplayerFrontend.getChannel().request('resourceMap', audioUri, appId) : "",
+                value: initialValue,
             };
         },
 
